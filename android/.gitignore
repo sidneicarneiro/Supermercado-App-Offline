@@ -12,3 +12,76 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Flutter/Dart/Pub related
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+flutter_*.png
+
+# Android related
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/key.properties
+android/*.iml
+android/.cxx/
+android/app/*.iml
+android/app/**/*.keystore
+android/app/**/*.jks
+
+# iOS/Xcode related
+ios/Flutter/.last_build_id
+ios/Pods/
+ios/Runner.xcworkspace/
+ios/Runner.xcuserstate
+ios/*.xcuserstate
+ios/*.xcworkspace
+ios/Podfile.lock
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcworkspace/xcuserdata/
+ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+ios/Runner.xcodeproj/xcshareddata/WorkspaceSettings.xcsettings
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcworkspace/xcuserdata/
+ios/Flutter/Flutter.podspec
+
+# macOS related
+macos/Flutter/ephemeral/
+macos/Pods/
+macos/Runner.xcworkspace/
+macos/Podfile.lock
+macos/Runner.xcodeproj/project.xcworkspace/
+macos/Runner.xcodeproj/xcuserdata/
+macos/Runner.xcworkspace/xcuserdata/
+macos/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+macos/Runner.xcodeproj/xcshareddata/WorkspaceSettings.xcsettings
+
+# Web related
+web/.dart_tool/
+web/build/
+
+# VS Code
+.vscode/
+.history/
+
+# IntelliJ/Android Studio
+.idea/
+*.iml
+
+# Others
+*.log
+*.tmp
+*.swp
+*.lock
+*.DS_Store
+
+# Obsolete
+pubspec.lock
