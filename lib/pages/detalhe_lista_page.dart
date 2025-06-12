@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../constants/api_constants.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
 import '../utils/auth_utils.dart';
 
 class ItemLista {
@@ -72,14 +71,26 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
   Future<ListaCompraDetalhe> fetchDetalhe() async {
     final headers = await getAuthHeaders();
     final response = await http.get(
-        Uri.parse('$kApiHost/lista/${widget.idLista}'),
-        headers: headers,
+      Uri.parse('$kApiHost/lista/${widget.idLista}'),
+      headers: headers,
     );
     if (response.statusCode == 200) {
       return ListaCompraDetalhe.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Erro ao carregar detalhes');
     }
+  }
+
+  Future<List<String>> _buscarProdutos(String query) async {
+    if (query.length < 3) return [];
+    final url = Uri.parse('$kApiHost/produtos/busca-parcial?nome=$query');
+    final headers = await getAuthHeaders();
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map<String>((item) => item['nome'] as String).toList();
+    }
+    return [];
   }
 
   Future<void> _selecionarData(ListaCompraDetalhe lista) async {
@@ -142,18 +153,15 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
       final headers = await getAuthHeaders();
       final response = await http.delete(url, headers: headers);
       if (response.statusCode == 204) {
-        // Atualiza a lista imediatamente após a exclusão
         setState(() {
           _detalheFuture = fetchDetalhe();
         });
       } else {
-        // Opcional: exibir mensagem de erro
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao excluir item, erro: ${response.statusCode}')),
         );
       }
     } catch (_) {
-      // Opcional: exibir mensagem de erro
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erro ao excluir item')),
       );
@@ -178,10 +186,26 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextFormField(
-                      controller: nomeController,
-                      decoration: const InputDecoration(labelText: 'Nome do Produto'),
-                      validator: (v) => v == null || v.isEmpty ? 'Informe o nome' : null,
+                    Autocomplete<String>(
+                      optionsBuilder: (TextEditingValue textEditingValue) async {
+                        if (textEditingValue.text.length < 3) return const Iterable<String>.empty();
+                        return await _buscarProdutos(textEditingValue.text);
+                      },
+                      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                        nomeController.text = controller.text;
+                        return TextFormField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          decoration: const InputDecoration(labelText: 'Nome do Produto'),
+                          validator: (v) => v == null || v.isEmpty ? 'Informe o nome' : null,
+                          autofillHints: null,
+                          enableSuggestions: false,
+                          autocorrect: false,
+                        );
+                      },
+                      onSelected: (String selection) {
+                        nomeController.text = selection;
+                      },
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -193,6 +217,9 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
                         if (int.tryParse(v) == null) return 'Quantidade inválida';
                         return null;
                       },
+                      autofillHints: null,
+                      enableSuggestions: false,
+                      autocorrect: false,
                     ),
                   ],
                 ),
@@ -214,9 +241,10 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
                       'quantidade': int.parse(quantidadeController.text),
                     });
                     try {
+                      final headers = await getAuthHeaders();
                       final response = await http.post(
                         url,
-                        headers: {'Content-Type': 'application/json'},
+                        headers: headers,
                         body: body,
                       );
                       if (response.statusCode == 200 || response.statusCode == 201) {

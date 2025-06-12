@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'cadastrar_lista_page.dart';
 import 'listar_listas_page.dart';
+import 'produtos_page.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -49,6 +50,21 @@ class SplashScreen extends StatelessWidget {
                   );
                 },
                 child: const Text('Listar'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.tertiary ?? colorScheme.primary,
+                  foregroundColor: colorScheme.onTertiary ?? colorScheme.onPrimary,
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProdutosPage()),
+                  );
+                },
+                child: const Text('Ver Produtos'),
               ),
             ],
           ),

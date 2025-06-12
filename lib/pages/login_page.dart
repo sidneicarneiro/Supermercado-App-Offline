@@ -32,7 +32,6 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setString('auth_token', token);
 
         if (!mounted) return;
-        // Redireciona para SplashScreen após login bem-sucedido
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const SplashScreen()),
@@ -68,13 +67,20 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _userController,
                 decoration: const InputDecoration(labelText: 'Usuário'),
                 validator: (v) => v == null || v.isEmpty ? 'Informe o usuário' : null,
+                autofillHints: null,
+                enableSuggestions: false,
+                autocorrect: false,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _passController,
                 decoration: const InputDecoration(labelText: 'Senha'),
                 obscureText: true,
+                obscuringCharacter: '*',
                 validator: (v) => v == null || v.isEmpty ? 'Informe a senha' : null,
+                enableSuggestions: false,
+                autocorrect: false,
+                autofillHints: null,
               ),
               const SizedBox(height: 24),
               ElevatedButton(
