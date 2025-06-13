@@ -1,28 +1,10 @@
 import 'package:flutter/material.dart';
-import '../constants/api_constants.dart';
-import '../utils/auth_utils.dart';
+import '../models/lista_compra.dart';
+import '../data/lista_repository.dart';
 import 'detalhe_lista_page.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
-class ListaCompra {
-  final int id;
-  final String nomeLista;
-  final String? dataCompra;
-
-  ListaCompra({required this.id, required this.nomeLista, required this.dataCompra});
-
-  factory ListaCompra.fromJson(Map<String, dynamic> json) {
-    return ListaCompra(
-      id: json['id'],
-      nomeLista: json['nomeLista'],
-      dataCompra: json['dataCompra'],
-    );
-  }
-}
 
 class ListarListasPage extends StatefulWidget {
-  const ListarListasPage({super.key});
+  const ListarListasPage({Key? key}) : super(key: key);
 
   @override
   State<ListarListasPage> createState() => _ListarListasPageState();
@@ -30,30 +12,46 @@ class ListarListasPage extends StatefulWidget {
 
 class _ListarListasPageState extends State<ListarListasPage> {
   late Future<List<ListaCompra>> _listasFuture;
-
-  Future<List<ListaCompra>> fetchListas() async {
-    final headers = await getAuthHeaders();
-    final response = await http.get(
-        Uri.parse('$kApiHost/listas'),
-        headers: headers
-    );
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => ListaCompra.fromJson(json)).toList();
-    } else {
-      throw Exception('Erro ao carregar listas');
-    }
-  }
+  final repo = ListaRepository();
 
   @override
   void initState() {
     super.initState();
-    _listasFuture = fetchListas();
+    _carregar();
+  }
+
+  void _carregar() {
+    setState(() {
+      _listasFuture = repo.listarListas();
+    });
+  }
+
+  void _confirmarExcluirLista(int idLista, String nomeLista) async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir lista'),
+        content: Text('Tem certeza que deseja excluir a lista "$nomeLista"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmado == true) {
+      await repo.excluirLista(idLista);
+      _carregar();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Listas de Compras')),
       body: FutureBuilder<List<ListaCompra>>(
@@ -67,34 +65,31 @@ class _ListarListasPageState extends State<ListarListasPage> {
             return const Center(child: Text('Nenhuma lista encontrada.'));
           }
           final listas = snapshot.data!;
-          return ListView.separated(
+          return ListView.builder(
             itemCount: listas.length,
-            separatorBuilder: (_, __) => const Divider(),
             itemBuilder: (context, index) {
               final lista = listas[index];
-              return ListTile(
-                title: Text(lista.nomeLista),
-                subtitle: Text(
-                  lista.dataCompra != null
-                      ? 'Data: ${DateTime.parse(lista.dataCompra!).day.toString().padLeft(2, '0')}/'
-                        '${DateTime.parse(lista.dataCompra!).month.toString().padLeft(2, '0')}/'
-                        '${DateTime.parse(lista.dataCompra!).year}'
-                      : 'Sem data',
-                ),
-                trailing: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: ListTile(
+                  title: Text(lista.nomeLista),
+                  subtitle: lista.dataCompra != null
+                      ? Text('Data: ${lista.dataCompra}')
+                      : null,
+                  onTap: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => DetalheListaPage(idLista: lista.id),
+                        builder: (_) => DetalheListaPage(idLista: lista.id!),
                       ),
                     );
+                    _carregar();
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.secondary,
-                    foregroundColor: colorScheme.onSecondary,
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    tooltip: 'Excluir lista',
+                    onPressed: () => _confirmarExcluirLista(lista.id!, lista.nomeLista),
                   ),
-                  child: const Text('Detalhes'),
                 ),
               );
             },

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutterapp/pages/initial_screen.dart';
+import 'package:shopito/pages/initial_screen.dart';
 import 'pages/cadastrar_lista_page.dart';
 import 'pages/listar_listas_page.dart';
 

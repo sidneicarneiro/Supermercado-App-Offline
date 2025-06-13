@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../constants/api_constants.dart';
-import '../utils/auth_utils.dart';
+import '../data/lista_repository.dart';
 import 'listar_listas_page.dart';
+import '../models/lista_compra.dart';
+import '../models/item_lista.dart';
 
 class CadastrarListaPage extends StatefulWidget {
   const CadastrarListaPage({super.key});
@@ -14,38 +13,95 @@ class CadastrarListaPage extends StatefulWidget {
 
 class _CadastrarListaPageState extends State<CadastrarListaPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nomeListaController = TextEditingController();
-  final TextEditingController _nomeProdutoController = TextEditingController();
-  final TextEditingController _quantidadeController = TextEditingController();
+  final _nomeListaController = TextEditingController();
+  final _nomeProdutoController = TextEditingController();
+  final _quantidadeController = TextEditingController();
   final List<Map<String, dynamic>> _itens = [];
+  final repo = ListaRepository();
 
-  Future<List<String>> _buscarProdutos(String query) async {
-    if (query.length < 3) return [];
-    final url = Uri.parse('$kApiHost/produtos/busca-parcial?nome=$query');
-    final headers = await getAuthHeaders();
-    final response = await http.get(url, headers: headers);
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      return data.map<String>((item) => item['nome'] as String).toList();
+  List<String> _sugestoes = [];
+  bool _carregandoSugestoes = false;
+  final FocusNode _focusNodeProduto = FocusNode();
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
+
+  @override
+  void dispose() {
+    _nomeListaController.dispose();
+    _nomeProdutoController.dispose();
+    _quantidadeController.dispose();
+    _focusNodeProduto.dispose();
+    _removeOverlay();
+    super.dispose();
+  }
+
+  Future<void> _buscarSugestoes(String query) async {
+    if (query.length < 3) {
+      _removeOverlay();
+      setState(() => _sugestoes = []);
+      return;
     }
-    return [];
+    setState(() => _carregandoSugestoes = true);
+    final results = await repo.buscarProdutos(query);
+    setState(() {
+      _sugestoes = results;
+      _carregandoSugestoes = false;
+    });
+    _showOverlay();
+  }
+
+  void _showOverlay() {
+    _removeOverlay();
+    if (_sugestoes.isEmpty || !_focusNodeProduto.hasFocus) return;
+    final overlay = Overlay.of(context);
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final size = renderBox.size;
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        width: size.width - 32, // padding horizontal
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          offset: const Offset(0, 56), // altura do campo + margem
+          child: Material(
+            elevation: 4,
+            child: ListView(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              children: _sugestoes.map((s) {
+                return ListTile(
+                  title: Text(s),
+                  onTap: () {
+                    _nomeProdutoController.text = s;
+                    _removeOverlay();
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(_overlayEntry!);
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
   void _adicionarItem() {
     final nomeProduto = _nomeProdutoController.text.trim();
     final quantidade = _quantidadeController.text.trim();
 
-    if (nomeProduto.isEmpty || quantidade.isEmpty) return;
-
-    final existe = _itens.any((item) =>
-        item['nomeProduto'].toString().toLowerCase() == nomeProduto.toLowerCase());
-
-    if (existe) {
+    if (nomeProduto.isEmpty || quantidade.isEmpty) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Produto duplicado'),
-          content: const Text('Este produto já foi adicionado à lista.'),
+        builder: (_) => AlertDialog(
+          title: const Text('Erro'),
+          content: const Text('Preencha o nome do produto e a quantidade.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -64,41 +120,33 @@ class _CadastrarListaPageState extends State<CadastrarListaPage> {
       });
       _nomeProdutoController.clear();
       _quantidadeController.clear();
+      _sugestoes = [];
     });
+    _removeOverlay();
   }
 
   void _cadastrarLista() async {
     if (_formKey.currentState!.validate() && _itens.isNotEmpty) {
-      final url = Uri.parse('$kApiHost/lista');
-      final body = jsonEncode({
-        "nomeLista": _nomeListaController.text,
-        "itens": _itens,
-      });
-      final headers = await getAuthHeaders();
-      final response = await http.post(
-        url,
-        headers: headers,
-        body: body,
+      final lista = ListaCompra(nomeLista: _nomeListaController.text);
+      final itens = _itens
+          .map((e) => ItemLista(
+        nomeProduto: e['nomeProduto'],
+        quantidade: e['quantidade'],
+      ))
+          .toList();
+      await repo.inserirLista(lista, itens);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lista cadastrada!')),
       );
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lista cadastrada!')),
-        );
-        _nomeListaController.clear();
-        setState(() {
-          _itens.clear();
-        });
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ListarListasPage()),
-        );
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao cadastrar: ${response.statusCode}')),
-        );
-      }
+      _nomeListaController.clear();
+      setState(() {
+        _itens.clear();
+      });
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const ListarListasPage()),
+      );
     }
   }
 
@@ -118,31 +166,29 @@ class _CadastrarListaPageState extends State<CadastrarListaPage> {
                 validator: (value) => value!.isEmpty ? 'Informe o nome da lista' : null,
                 autofillHints: null,
                 enableSuggestions: false,
-                autocorrect: false
+                autocorrect: false,
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
-                    child: Autocomplete<String>(
-                      optionsBuilder: (TextEditingValue textEditingValue) async {
-                        if (textEditingValue.text.length < 3) return const Iterable<String>.empty();
-                        return await _buscarProdutos(textEditingValue.text);
-                      },
-                      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                        _nomeProdutoController.text = controller.text;
-                        return TextFormField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          decoration: const InputDecoration(labelText: 'Nome do Produto'),
-                          autofillHints: null,
-                          enableSuggestions: false,
-                          autocorrect: false
-                        );
-                      },
-                      onSelected: (String selection) {
-                        _nomeProdutoController.text = selection;
-                      },
+                    child: CompositedTransformTarget(
+                      link: _layerLink,
+                      child: TextFormField(
+                        controller: _nomeProdutoController,
+                        focusNode: _focusNodeProduto,
+                        decoration: const InputDecoration(labelText: 'Nome do Produto'),
+                        onChanged: (value) => _buscarSugestoes(value),
+                        autofillHints: null,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                        onTap: () {
+                          if (_nomeProdutoController.text.length >= 3) {
+                            _buscarSugestoes(_nomeProdutoController.text);
+                          }
+                        },
+                        onEditingComplete: _removeOverlay,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -161,6 +207,8 @@ class _CadastrarListaPageState extends State<CadastrarListaPage> {
                   ),
                 ],
               ),
+              if (_carregandoSugestoes)
+                const LinearProgressIndicator(),
               const SizedBox(height: 16),
               Expanded(
                 child: ListView.builder(
