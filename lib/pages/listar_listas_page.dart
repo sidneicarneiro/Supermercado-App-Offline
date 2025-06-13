@@ -26,6 +26,16 @@ class _ListarListasPageState extends State<ListarListasPage> {
     });
   }
 
+  String _formatarData(String? data) {
+    if (data == null || data.isEmpty) return '';
+    try {
+      final d = DateTime.parse(data);
+      return '${d.year.toString().padLeft(4, '0')}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return data;
+    }
+  }
+
   void _confirmarExcluirLista(int idLista, String nomeLista) async {
     final confirmado = await showDialog<bool>(
       context: context,
@@ -74,7 +84,7 @@ class _ListarListasPageState extends State<ListarListasPage> {
                 child: ListTile(
                   title: Text(lista.nomeLista),
                   subtitle: lista.dataCompra != null
-                      ? Text('Data: ${lista.dataCompra}')
+                      ? Text('Data: ${_formatarData(lista.dataCompra)}')
                       : null,
                   onTap: () async {
                     await Navigator.push(

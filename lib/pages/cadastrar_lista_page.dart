@@ -13,69 +13,92 @@ class CadastrarListaPage extends StatefulWidget {
 
 class _CadastrarListaPageState extends State<CadastrarListaPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nomeListaController = TextEditingController();
+  final _nomeMercadoController = TextEditingController();
   final _nomeProdutoController = TextEditingController();
   final _quantidadeController = TextEditingController();
   final List<Map<String, dynamic>> _itens = [];
   final repo = ListaRepository();
 
-  List<String> _sugestoes = [];
-  bool _carregandoSugestoes = false;
+  List<String> _sugestoesMercado = [];
+  List<String> _sugestoesProduto = [];
+  bool _carregandoSugestoesMercado = false;
+  bool _carregandoSugestoesProduto = false;
+
+  final FocusNode _focusNodeMercado = FocusNode();
   final FocusNode _focusNodeProduto = FocusNode();
-  final LayerLink _layerLink = LayerLink();
-  OverlayEntry? _overlayEntry;
+  final LayerLink _layerLinkMercado = LayerLink();
+  final LayerLink _layerLinkProduto = LayerLink();
+  OverlayEntry? _overlayEntryMercado;
+  OverlayEntry? _overlayEntryProduto;
 
   @override
   void dispose() {
-    _nomeListaController.dispose();
+    _nomeMercadoController.dispose();
     _nomeProdutoController.dispose();
     _quantidadeController.dispose();
+    _focusNodeMercado.dispose();
     _focusNodeProduto.dispose();
-    _removeOverlay();
+    _removeOverlayMercado();
+    _removeOverlayProduto();
     super.dispose();
   }
 
-  Future<void> _buscarSugestoes(String query) async {
-    if (query.length < 3) {
-      _removeOverlay();
-      setState(() => _sugestoes = []);
+  Future<void> _buscarSugestoesMercado(String query) async {
+    if (query.length < 2) {
+      _removeOverlayMercado();
+      setState(() => _sugestoesMercado = []);
       return;
     }
-    setState(() => _carregandoSugestoes = true);
-    final results = await repo.buscarProdutos(query);
+    setState(() => _carregandoSugestoesMercado = true);
+    final results = await repo.buscarMercados(query); // Implemente este método no repositório
     setState(() {
-      _sugestoes = results;
-      _carregandoSugestoes = false;
+      _sugestoesMercado = results;
+      _carregandoSugestoesMercado = false;
     });
-    _showOverlay();
+    _showOverlayMercado();
   }
 
-  void _showOverlay() {
-    _removeOverlay();
-    if (_sugestoes.isEmpty || !_focusNodeProduto.hasFocus) return;
+  Future<void> _buscarSugestoesProduto(String query) async {
+    if (query.length < 3) {
+      _removeOverlayProduto();
+      setState(() => _sugestoesProduto = []);
+      return;
+    }
+    setState(() => _carregandoSugestoesProduto = true);
+    final results = await repo.buscarProdutos(query);
+    setState(() {
+      _sugestoesProduto = results;
+      _carregandoSugestoesProduto = false;
+    });
+    _showOverlayProduto();
+  }
+
+  void _showOverlayMercado() {
+    _removeOverlayMercado();
+    if (_sugestoesMercado.isEmpty || !_focusNodeMercado.hasFocus) return;
     final overlay = Overlay.of(context);
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
     final size = renderBox.size;
 
-    _overlayEntry = OverlayEntry(
+    _overlayEntryMercado = OverlayEntry(
       builder: (context) => Positioned(
-        width: size.width - 32, // padding horizontal
+        width: size.width - 32,
         child: CompositedTransformFollower(
-          link: _layerLink,
+          link: _layerLinkMercado,
           showWhenUnlinked: false,
-          offset: const Offset(0, 56), // altura do campo + margem
+          offset: const Offset(0, 56),
           child: Material(
             elevation: 4,
             child: ListView(
               padding: EdgeInsets.zero,
               shrinkWrap: true,
-              children: _sugestoes.map((s) {
+              children: _sugestoesMercado.map((s) {
                 return ListTile(
                   title: Text(s),
                   onTap: () {
-                    _nomeProdutoController.text = s;
-                    _removeOverlay();
+                    _nomeMercadoController.text = s;
+                    _removeOverlayMercado();
                   },
                 );
               }).toList(),
@@ -84,12 +107,54 @@ class _CadastrarListaPageState extends State<CadastrarListaPage> {
         ),
       ),
     );
-    overlay.insert(_overlayEntry!);
+    overlay.insert(_overlayEntryMercado!);
   }
 
-  void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+  void _showOverlayProduto() {
+    _removeOverlayProduto();
+    if (_sugestoesProduto.isEmpty || !_focusNodeProduto.hasFocus) return;
+    final overlay = Overlay.of(context);
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final size = renderBox.size;
+
+    _overlayEntryProduto = OverlayEntry(
+      builder: (context) => Positioned(
+        width: size.width - 32,
+        child: CompositedTransformFollower(
+          link: _layerLinkProduto,
+          showWhenUnlinked: false,
+          offset: const Offset(0, 56),
+          child: Material(
+            elevation: 4,
+            child: ListView(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              children: _sugestoesProduto.map((s) {
+                return ListTile(
+                  title: Text(s),
+                  onTap: () {
+                    _nomeProdutoController.text = s;
+                    _removeOverlayProduto();
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(_overlayEntryProduto!);
+  }
+
+  void _removeOverlayMercado() {
+    _overlayEntryMercado?.remove();
+    _overlayEntryMercado = null;
+  }
+
+  void _removeOverlayProduto() {
+    _overlayEntryProduto?.remove();
+    _overlayEntryProduto = null;
   }
 
   void _adicionarItem() {
@@ -120,14 +185,14 @@ class _CadastrarListaPageState extends State<CadastrarListaPage> {
       });
       _nomeProdutoController.clear();
       _quantidadeController.clear();
-      _sugestoes = [];
+      _sugestoesProduto = [];
     });
-    _removeOverlay();
+    _removeOverlayProduto();
   }
 
   void _cadastrarLista() async {
     if (_formKey.currentState!.validate() && _itens.isNotEmpty) {
-      final lista = ListaCompra(nomeLista: _nomeListaController.text);
+      final lista = ListaCompra(nomeLista: _nomeMercadoController.text);
       final itens = _itens
           .map((e) => ItemLista(
         nomeProduto: e['nomeProduto'],
@@ -139,7 +204,7 @@ class _CadastrarListaPageState extends State<CadastrarListaPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lista cadastrada!')),
       );
-      _nomeListaController.clear();
+      _nomeMercadoController.clear();
       setState(() {
         _itens.clear();
       });
@@ -160,34 +225,47 @@ class _CadastrarListaPageState extends State<CadastrarListaPage> {
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                controller: _nomeListaController,
-                decoration: const InputDecoration(labelText: 'Nome da Lista'),
-                validator: (value) => value!.isEmpty ? 'Informe o nome da lista' : null,
-                autofillHints: null,
-                enableSuggestions: false,
-                autocorrect: false,
+              CompositedTransformTarget(
+                link: _layerLinkMercado,
+                child: TextFormField(
+                  controller: _nomeMercadoController,
+                  focusNode: _focusNodeMercado,
+                  decoration: const InputDecoration(labelText: 'Nome do Mercado'),
+                  validator: (value) => value!.isEmpty ? 'Informe o nome do mercado' : null,
+                  autofillHints: null,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  onChanged: (value) => _buscarSugestoesMercado(value),
+                  onTap: () {
+                    if (_nomeMercadoController.text.length >= 2) {
+                      _buscarSugestoesMercado(_nomeMercadoController.text);
+                    }
+                  },
+                  onEditingComplete: _removeOverlayMercado,
+                ),
               ),
+              if (_carregandoSugestoesMercado)
+                const LinearProgressIndicator(),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: CompositedTransformTarget(
-                      link: _layerLink,
+                      link: _layerLinkProduto,
                       child: TextFormField(
                         controller: _nomeProdutoController,
                         focusNode: _focusNodeProduto,
                         decoration: const InputDecoration(labelText: 'Nome do Produto'),
-                        onChanged: (value) => _buscarSugestoes(value),
+                        onChanged: (value) => _buscarSugestoesProduto(value),
                         autofillHints: null,
                         enableSuggestions: false,
                         autocorrect: false,
                         onTap: () {
                           if (_nomeProdutoController.text.length >= 3) {
-                            _buscarSugestoes(_nomeProdutoController.text);
+                            _buscarSugestoesProduto(_nomeProdutoController.text);
                           }
                         },
-                        onEditingComplete: _removeOverlay,
+                        onEditingComplete: _removeOverlayProduto,
                       ),
                     ),
                   ),
@@ -207,7 +285,7 @@ class _CadastrarListaPageState extends State<CadastrarListaPage> {
                   ),
                 ],
               ),
-              if (_carregandoSugestoes)
+              if (_carregandoSugestoesProduto)
                 const LinearProgressIndicator(),
               const SizedBox(height: 16),
               Expanded(

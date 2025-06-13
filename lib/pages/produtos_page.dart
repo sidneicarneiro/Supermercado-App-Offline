@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../data/lista_repository.dart';
-import 'package:intl/intl.dart';
 
 class ProdutosPage extends StatefulWidget {
   const ProdutosPage({super.key});
@@ -12,7 +11,8 @@ class ProdutosPage extends StatefulWidget {
 
 class _ProdutosPageState extends State<ProdutosPage> {
   final repo = ListaRepository();
-  Map<String, List<_ProdutoPrecoPorData>> _historico = {};
+  Map<String, List<_ProdutoPrecoPorData>> _historicoCompleto = {};
+  Map<String, List<_ProdutoPrecoPorData>> _historicoFiltrado = {};
   String _busca = '';
   bool _carregando = false;
 
@@ -22,7 +22,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
     _carregarHistorico();
   }
 
-  Future<void> _carregarHistorico([String query = '']) async {
+  Future<void> _carregarHistorico() async {
     setState(() => _carregando = true);
 
     final listas = await repo.listarListas();
@@ -31,9 +31,6 @@ class _ProdutosPageState extends State<ProdutosPage> {
     for (final lista in listas) {
       final itens = await repo.listarItens(lista.id!);
       for (final item in itens) {
-        if (query.isNotEmpty && !item.nomeProduto.toLowerCase().contains(query.toLowerCase())) {
-          continue;
-        }
         historico.putIfAbsent(item.nomeProduto, () => []);
         historico[item.nomeProduto]!.add(
           _ProdutoPrecoPorData(
@@ -46,14 +43,29 @@ class _ProdutosPageState extends State<ProdutosPage> {
     }
 
     setState(() {
-      _historico = historico;
+      _historicoCompleto = historico;
+      _aplicarFiltro();
       _carregando = false;
     });
   }
 
+  void _aplicarFiltro() {
+    if (_busca.isEmpty) {
+      _historicoFiltrado = Map.from(_historicoCompleto);
+    } else {
+      _historicoFiltrado = {
+        for (var entry in _historicoCompleto.entries)
+          if (entry.key.toLowerCase().contains(_busca.toLowerCase()))
+            entry.key: entry.value
+      };
+    }
+  }
+
   void _onBuscar(String value) {
-    _busca = value;
-    _carregarHistorico(_busca);
+    setState(() {
+      _busca = value;
+      _aplicarFiltro();
+    });
   }
 
   @override
@@ -69,17 +81,20 @@ class _ProdutosPageState extends State<ProdutosPage> {
                 labelText: 'Buscar produto',
                 prefixIcon: Icon(Icons.search),
               ),
+              autofillHints: null,
+              enableSuggestions: false,
+              autocorrect: false,
               onChanged: _onBuscar,
             ),
             const SizedBox(height: 16),
             if (_carregando)
               const Center(child: CircularProgressIndicator())
-            else if (_historico.isEmpty)
+            else if (_historicoFiltrado.isEmpty)
               const Center(child: Text('Nenhum produto encontrado.'))
             else
               Expanded(
                 child: ListView(
-                  children: _historico.entries.map((entry) {
+                  children: _historicoFiltrado.entries.map((entry) {
                     final nomeProduto = entry.key;
                     final precos = entry.value
                       ..removeWhere((p) => p.preco == null || p.data.isEmpty)
@@ -97,10 +112,14 @@ class _ProdutosPageState extends State<ProdutosPage> {
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       child: ExpansionTile(
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(nomeProduto, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Text(
+                              nomeProduto,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
@@ -108,7 +127,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                'Menor preço: R\$ ${menorPreco.toStringAsFixed(2)}',
+                                'Menor preço: \$ ${menorPreco.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   color: Colors.green,
                                   fontWeight: FontWeight.bold,
@@ -139,15 +158,20 @@ class _ProdutosPageState extends State<ProdutosPage> {
   }
 
   Widget _buildLineChart(List<_ProdutoPrecoPorData> precos) {
-    final dateFormat = DateFormat('yyyy-MM-dd');
     final pontos = <FlSpot>[];
     final labels = <int, String>{};
     for (var i = 0; i < precos.length; i++) {
       final p = precos[i];
       try {
-        final date = dateFormat.parse(p.data);
+        final partes = p.data.split('-');
+        if (partes.length == 3) {
+          final dia = partes[2].padLeft(2, '0');
+          final mes = partes[1].padLeft(2, '0');
+          labels[i] = '$dia/$mes';
+        } else {
+          labels[i] = p.data;
+        }
         pontos.add(FlSpot(i.toDouble(), p.preco ?? 0));
-        labels[i] = DateFormat('dd/MM').format(date);
       } catch (_) {}
     }
     if (pontos.isEmpty) {

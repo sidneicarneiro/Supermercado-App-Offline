@@ -20,6 +20,8 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
   final Map<int, TextEditingController> _precoControllers = {};
   final Map<int, TextEditingController> _quantidadeControllers = {};
   final Map<int, bool> _showSuccessIcon = {};
+  final Map<int, GlobalKey> _nomeKeys = {};
+  OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
@@ -37,11 +39,30 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
     return await repo.buscarProdutos(query);
   }
 
+  DateTime? parseDataCompra(String? data) {
+    if (data == null || data.isEmpty) return null;
+    try {
+      if (data.contains('/')) {
+        final partes = data.split('/');
+        if (partes.length == 3) {
+          final ano = int.parse(partes[0]);
+          final mes = int.parse(partes[1]);
+          final dia = int.parse(partes[2]);
+          return DateTime(ano, mes, dia);
+        }
+      }
+      // fallback para o parse padrão
+      return DateTime.parse(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _selecionarData(ListaCompra lista) async {
-    final dataAtual = _dataEditavel ?? (lista.dataCompra != null ? DateTime.parse(lista.dataCompra!) : DateTime.now());
+    final dataAtual = _dataEditavel ?? (lista.dataCompra != null ? parseDataCompra(lista.dataCompra) : null);
     final novaData = await showDatePicker(
       context: context,
-      initialDate: dataAtual,
+      initialDate: dataAtual ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       locale: const Locale('pt', 'BR'),
@@ -51,7 +72,8 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
         _dataEditavel = novaData;
         _salvandoData = true;
       });
-      await repo.atualizarDataCompra(lista.id!, novaData.toIso8601String());
+      final dataFormatada = '${novaData.year.toString().padLeft(4, '0')}/${novaData.month.toString().padLeft(2, '0')}/${novaData.day.toString().padLeft(2, '0')}';
+      await repo.atualizarDataCompra(lista.id!, dataFormatada);
       setState(() {
         _salvandoData = false;
         _carregar();
@@ -101,10 +123,10 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
                     Autocomplete<String>(
                       optionsBuilder: (TextEditingValue textEditingValue) async {
                         if (textEditingValue.text.length < 3) return const Iterable<String>.empty();
-                        return await _buscarProdutos(textEditingValue.text);
+                        final results = await _buscarProdutos(textEditingValue.text);
+                        return results;
                       },
                       fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                        nomeController.text = controller.text;
                         return TextFormField(
                           controller: controller,
                           focusNode: focusNode,
@@ -113,6 +135,9 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
                           autofillHints: null,
                           enableSuggestions: false,
                           autocorrect: false,
+                          onChanged: (value) {
+                            nomeController.text = value;
+                          },
                         );
                       },
                       onSelected: (String selection) {
@@ -172,6 +197,52 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
     );
   }
 
+  void _mostrarNomeCompleto(int idItemProduto, String nomeProduto) {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    final key = _nomeKeys[idItemProduto];
+    if (key == null) return;
+    final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final overlay = Overlay.of(context);
+    if (overlay == null) return;
+    final position = renderBox.localToGlobal(Offset.zero);
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        left: position.dx,
+        top: position.dy - renderBox.size.height - 8,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 350),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.85),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              nomeProduto,
+              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(_overlayEntry!);
+    Future.delayed(const Duration(seconds: 1), () {
+      _overlayEntry?.remove();
+      _overlayEntry = null;
+    });
+  }
+
+  @override
+  void dispose() {
+    _overlayEntry?.remove();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -188,7 +259,7 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
             return const Center(child: Text('Nenhum detalhe encontrado.'));
           }
           final lista = snapshot.data!;
-          final dataCompra = _dataEditavel ?? (lista.dataCompra != null ? DateTime.parse(lista.dataCompra!) : null);
+          final dataCompra = _dataEditavel ?? (lista.dataCompra != null ? parseDataCompra(lista.dataCompra) : null);
           return Padding(
             padding: const EdgeInsets.all(8),
             child: Column(
@@ -238,7 +309,7 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
                       final itens = snapshot.data!;
                       final total = itens.fold<double>(
                         0,
-                            (sum, item) => sum + (item.quantidade * (item.preco ?? 0)),
+                        (sum, item) => sum + (item.quantidade * (item.preco ?? 0)),
                       );
                       return Column(
                         children: [
@@ -249,16 +320,17 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
                                 final item = itens[index];
                                 _precoControllers.putIfAbsent(
                                   item.idItemProduto!,
-                                      () => TextEditingController(
+                                  () => TextEditingController(
                                     text: item.preco?.toStringAsFixed(2) ?? '',
                                   ),
                                 );
                                 _quantidadeControllers.putIfAbsent(
                                   item.idItemProduto!,
-                                      () => TextEditingController(
+                                  () => TextEditingController(
                                     text: item.quantidade.toString(),
                                   ),
                                 );
+                                _nomeKeys.putIfAbsent(item.idItemProduto!, () => GlobalKey());
                                 return Card(
                                   margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
                                   child: Padding(
@@ -270,9 +342,15 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
                                           child: Row(
                                             children: [
                                               Expanded(
-                                                child: Text(
-                                                  item.nomeProduto,
-                                                  overflow: TextOverflow.ellipsis,
+                                                child: GestureDetector(
+                                                  onTap: () => _mostrarNomeCompleto(item.idItemProduto!, item.nomeProduto),
+                                                  child: Container(
+                                                    key: _nomeKeys[item.idItemProduto!],
+                                                    child: Text(
+                                                      item.nomeProduto,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                               if (_showSuccessIcon[item.idItemProduto!] == true)
@@ -341,7 +419,7 @@ class _DetalheListaPageState extends State<DetalheListaPage> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Text(
-                                  'Total: R\$ ${total.toStringAsFixed(2)}',
+                                  'Total: \$ ${total.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,

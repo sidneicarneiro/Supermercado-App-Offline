@@ -79,6 +79,19 @@ class ListaRepository {
     return result.map((e) => e['nomeProduto'] as String).toList();
   }
 
+  Future<List<String>> buscarMercados(String query) async {
+    final database = await db;
+    final result = await database.rawQuery(
+      '''
+      SELECT DISTINCT nomeLista FROM listas
+      WHERE nomeLista LIKE ?
+      ORDER BY nomeLista
+      ''',
+      ['%$query%'],
+    );
+    return result.map((e) => e['nomeLista'] as String).toList();
+  }
+
   Future<void> excluirLista(int idLista) async {
     final database = await db;
     await database.delete('itens', where: 'idLista = ?', whereArgs: [idLista]);
