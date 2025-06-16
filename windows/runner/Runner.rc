@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.yangsoft" "\0"
-            VALUE "FileDescription", "shopito" "\0"
+            VALUE "FileDescription", "tiggy" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "shopito" "\0"
+            VALUE "InternalName", "tiggy" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.yangsoft. All rights reserved." "\0"
-            VALUE "OriginalFilename", "shopito.exe" "\0"
-            VALUE "ProductName", "shopito" "\0"
+            VALUE "OriginalFilename", "tiggy.exe" "\0"
+            VALUE "ProductName", "tiggy" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

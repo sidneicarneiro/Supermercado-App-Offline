@@ -8,7 +8,7 @@ final Color accentColor = Color(0xFFFFC107); // Amarelo
 final Color greenColor = Color(0xFF43A047); // Verde
 final Color darkColor = Color(0xFF2D2946); // Roxo escuro
 
-void main() {
+void main() async {
   runApp(const MyApp());
 }
 

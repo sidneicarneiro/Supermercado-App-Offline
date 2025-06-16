@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+import '../models/produto_preco_data.dart';
 import '../data/lista_repository.dart';
+import 'widgets/produto_line_chart.dart';
+import 'dart:async';
 
 class ProdutosPage extends StatefulWidget {
   const ProdutosPage({super.key});
@@ -11,10 +13,16 @@ class ProdutosPage extends StatefulWidget {
 
 class _ProdutosPageState extends State<ProdutosPage> {
   final repo = ListaRepository();
-  Map<String, List<_ProdutoPrecoPorData>> _historicoCompleto = {};
-  Map<String, List<_ProdutoPrecoPorData>> _historicoFiltrado = {};
+  Map<String, List<ProdutoPrecoPorData>> _historicoCompleto = {};
+  Map<String, List<ProdutoPrecoPorData>> _historicoFiltrado = {};
   String _busca = '';
   bool _carregando = false;
+
+  // Controle do ponto selecionado no gráfico
+  int? _pontoSelecionado;
+  double? _precoSelecionado;
+  Offset? _posicaoLabel;
+  Timer? _timerLabel;
 
   @override
   void initState() {
@@ -26,14 +34,14 @@ class _ProdutosPageState extends State<ProdutosPage> {
     setState(() => _carregando = true);
 
     final listas = await repo.listarListas();
-    final Map<String, List<_ProdutoPrecoPorData>> historico = {};
+    final Map<String, List<ProdutoPrecoPorData>> historico = {};
 
     for (final lista in listas) {
       final itens = await repo.listarItens(lista.id!);
       for (final item in itens) {
         historico.putIfAbsent(item.nomeProduto, () => []);
         historico[item.nomeProduto]!.add(
-          _ProdutoPrecoPorData(
+          ProdutoPrecoPorData(
             data: lista.dataCompra ?? '',
             preco: item.preco,
             quantidade: item.quantidade,
@@ -69,9 +77,17 @@ class _ProdutosPageState extends State<ProdutosPage> {
   }
 
   @override
+  void dispose() {
+    _timerLabel?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final entriesOrdenadas = _historicoFiltrado.entries.toList()
+      ..sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
     return Scaffold(
-      appBar: AppBar(title: const Text('Histórico de Preços dos Produtos')),
+      appBar: AppBar(title: const Text('Histórico de Preços')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -81,20 +97,17 @@ class _ProdutosPageState extends State<ProdutosPage> {
                 labelText: 'Buscar produto',
                 prefixIcon: Icon(Icons.search),
               ),
-              autofillHints: null,
-              enableSuggestions: false,
-              autocorrect: false,
               onChanged: _onBuscar,
             ),
             const SizedBox(height: 16),
             if (_carregando)
               const Center(child: CircularProgressIndicator())
-            else if (_historicoFiltrado.isEmpty)
+            else if (entriesOrdenadas.isEmpty)
               const Center(child: Text('Nenhum produto encontrado.'))
             else
               Expanded(
                 child: ListView(
-                  children: _historicoFiltrado.entries.map((entry) {
+                  children: entriesOrdenadas.map((entry) {
                     final nomeProduto = entry.key;
                     final precos = entry.value
                       ..removeWhere((p) => p.preco == null || p.data.isEmpty)
@@ -127,7 +140,7 @@ class _ProdutosPageState extends State<ProdutosPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                'Menor preço: \$ ${menorPreco.toStringAsFixed(2)}',
+                                'Menor preço: € ${menorPreco.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   color: Colors.green,
                                   fontWeight: FontWeight.bold,
@@ -157,71 +170,11 @@ class _ProdutosPageState extends State<ProdutosPage> {
     );
   }
 
-  Widget _buildLineChart(List<_ProdutoPrecoPorData> precos) {
-    final pontos = <FlSpot>[];
-    final labels = <int, String>{};
-    for (var i = 0; i < precos.length; i++) {
-      final p = precos[i];
-      try {
-        final partes = p.data.split('-');
-        if (partes.length == 3) {
-          final dia = partes[2].padLeft(2, '0');
-          final mes = partes[1].padLeft(2, '0');
-          labels[i] = '$dia/$mes';
-        } else {
-          labels[i] = p.data;
-        }
-        pontos.add(FlSpot(i.toDouble(), p.preco ?? 0));
-      } catch (_) {}
-    }
-    if (pontos.isEmpty) {
-      return const Center(child: Text('Sem dados para o gráfico.'));
-    }
-    return LineChart(
-      LineChartData(
-        minY: pontos.map((e) => e.y).reduce((a, b) => a < b ? a : b) - 1,
-        maxY: pontos.map((e) => e.y).reduce((a, b) => a > b ? a : b) + 1,
-        titlesData: FlTitlesData(
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: true, reservedSize: 40),
-          ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                final idx = value.toInt();
-                return Text(labels[idx] ?? '', style: const TextStyle(fontSize: 10));
-              },
-              interval: 1,
-            ),
-          ),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        ),
-        gridData: FlGridData(show: true),
-        borderData: FlBorderData(show: true),
-        lineBarsData: [
-          LineChartBarData(
-            spots: pontos,
-            isCurved: true,
-            color: Colors.blue,
-            barWidth: 3,
-            dotData: FlDotData(show: true),
-          ),
-        ],
-      ),
+  Widget _buildLineChart(List<ProdutoPrecoPorData> precos) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ProdutoLineChart(precos: precos);
+      },
     );
   }
-}
-
-class _ProdutoPrecoPorData {
-  final String data;
-  final double? preco;
-  final int quantidade;
-
-  _ProdutoPrecoPorData({
-    required this.data,
-    required this.preco,
-    required this.quantidade,
-  });
 }

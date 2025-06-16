@@ -1,4 +1,4 @@
-package com.yangsoft.shopito
+package com.yangsoft.tiggy
 
 import io.flutter.embedding.android.FlutterActivity
 

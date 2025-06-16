@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import '../data/lista_repository.dart';
 import 'cadastrar_lista_page.dart';
 import 'listar_listas_page.dart';
 import 'produtos_page.dart';
@@ -66,6 +68,19 @@ class SplashScreen extends StatelessWidget {
                 },
                 child: const Text('Ver Produtos'),
               ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.delete_forever),
+                  label: const Text('Resetar Banco'),
+                  onPressed: () async {
+                    await ListaRepository().resetarBanco();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Banco de dados resetado!')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                ),
             ],
           ),
         ),

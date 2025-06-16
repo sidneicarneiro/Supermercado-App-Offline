@@ -1,0 +1,235 @@
+{
+  "categorias": [
+    {
+      "id": 0,
+      "nome": "Outra",
+      "descricao": "Não encontrei ou não quero categorizar.",
+      "icone": "category",
+      "subcategorias": [
+        {
+          "id": 0,
+          "nome": "Outra",
+          "descricao": "Não encontrei ou não quero categorizar.",
+          "icone": "category"
+        }
+      ]
+    },
+
+    {
+      "id": 1,
+      "nome": "Mercearia",
+      "descricao": "Itens essenciais como grãos, massas e temperos para o dia a dia.",
+      "icone": "shopping_cart",
+      "subcategorias": [
+        { "id": 101, "nome": "Arroz e Feijão", "descricao": "Grãos básicos para diversas receitas.", "icone": "restaurant" },
+        { "id": 102, "nome": "Massas", "descricao": "Massas secas como espaguete e penne.", "icone": "ramen_dining" },
+        { "id": 103, "nome": "Azeites e Óleos", "descricao": "Óleos e azeites para cozinhar.", "icone": "science" },
+        { "id": 104, "nome": "Conservas", "descricao": "Alimentos embalados para armazenamento prolongado.", "icone": "inventory_2" },
+        { "id": 105, "nome": "Especiarias", "descricao": "Temperos para dar sabor às refeições.", "icone": "deployed_code" }
+      ]
+    },
+    {
+      "id": 2,
+      "nome": "Congelados",
+      "descricao": "Alimentos prontos e ingredientes congelados para facilitar o preparo.",
+      "icone": "ac_unit",
+      "subcategorias": [
+        { "id": 201, "nome": "Peixes", "descricao": "Peixes congelados prontos para cozinhar.", "icone": "waves" },
+        { "id": 202, "nome": "Carnes", "descricao": "Cortes congelados de carne bovina, suína e aves.", "icone": "lunch_dining" },
+        { "id": 203, "nome": "Vegetais", "descricao": "Legumes e verduras congeladas.", "icone": "eco" },
+        { "id": 204, "nome": "Pizzas", "descricao": "Pizzas congeladas para refeições rápidas.", "icone": "local_pizza" },
+        { "id": 205, "nome": "Refeições prontas", "descricao": "Pratos prontos congelados para aquecer e servir.", "icone": "takeout_dining" }
+      ]
+    },
+    {
+      "id": 3,
+      "nome": "Laticínios e Ovos",
+      "descricao": "Produtos derivados do leite e ovos para diversas receitas.",
+      "icone": "bakery_dining",
+      "subcategorias": [
+        { "id": 301, "nome": "Leite", "descricao": "Leite integral, semidesnatado, desnatado e alternativos.", "icone": "local_cafe" },
+        { "id": 302, "nome": "Iogurtes", "descricao": "Iogurtes naturais e com sabores.", "icone": "emoji_food_beverage" },
+        { "id": 303, "nome": "Queijos", "descricao": "Diversos tipos de queijos para todos os gostos.", "icone": "brunch_dining" },
+        { "id": 304, "nome": "Manteiga", "descricao": "Manteigas tradicionais e com sal, além de margarinas.", "icone": "breakfast_dining" },
+        { "id": 305, "nome": "Ovos", "descricao": "Ovos brancos e vermelhos frescos.", "icone": "egg" }
+      ]
+    },
+    {
+      "id": 4,
+      "nome": "Frutas e Legumes",
+      "descricao": "Produtos frescos e saudáveis, direto da horta.",
+      "icone": "local_florist",
+      "subcategorias": [
+        { "id": 401, "nome": "Frutas Frescas", "descricao": "Frutas tropicais e sazonais.", "icone": "emoji_nature" },
+        { "id": 402, "nome": "Legumes Frescos", "descricao": "Verduras e legumes fresquinhos.", "icone": "grass" },
+        { "id": 403, "nome": "Produtos Embalados", "descricao": "Frutas e vegetais higienizados e embalados.", "icone": "inventory" }
+      ]
+    },
+    {
+      "id": 5,
+      "nome": "Peixaria e Talho",
+      "descricao": "Peixes e carnes frescas para pratos variados.",
+      "icone": "restaurant_menu",
+      "subcategorias": [
+        { "id": 501, "nome": "Carnes Frescas", "descricao": "Cortes selecionados de carnes in natura.", "icone": "set_meal" },
+        { "id": 502, "nome": "Peixes", "descricao": "Peixes frescos de diversas espécies.", "icone": "lunch_dining" },
+        { "id": 503, "nome": "Mariscos", "descricao": "Frutos do mar frescos.", "icone": "bubble_chart" }
+      ]
+    },
+    {
+      "id": 6,
+      "nome": "Charcutaria e Queijos",
+      "descricao": "Delícias curadas e queijos finos para todas as ocasiões.",
+      "icone": "flatware",
+      "subcategorias": [
+        { "id": 601, "nome": "Enchidos", "descricao": "Produtos como salame, chouriço e linguiças.", "icone": "restaurant" },
+        { "id": 602, "nome": "Presuntos", "descricao": "Presunto cru, cozido e peito de peru.", "icone": "set_meal" },
+        { "id": 603, "nome": "Queijos Variados", "descricao": "Queijos especiais e importados.", "icone": "brunch_dining" }
+      ]
+    },
+    {
+      "id": 7,
+      "nome": "Bebidas e Garrafeira",
+      "descricao": "Bebidas alcoólicas e não alcoólicas para todas as ocasiões.",
+      "icone": "wine_bar",
+      "subcategorias": [
+        { "id": 701, "nome": "Refrigerantes", "descricao": "Bebidas gaseificadas e saborizadas.", "icone": "local_drink" },
+        { "id": 702, "nome": "Sumos e Sucos", "descricao": "Bebidas naturais e industrializadas.", "icone": "emoji_food_beverage" },
+        { "id": 703, "nome": "Vinhos", "descricao": "Tintos, brancos e rosés nacionais e importados.", "icone": "wine_bar" },
+        { "id": 704, "nome": "Cervejas", "descricao": "Cervejas comuns e artesanais.", "icone": "sports_bar" },
+        { "id": 705, "nome": "Destilados", "descricao": "Bebidas alcoólicas como vodka, rum e uísque.", "icone": "liquor" }
+      ]
+    },
+    {
+      "id": 8,
+      "nome": "Bebé",
+      "descricao": "Produtos essenciais para o cuidado com o seu bebé.",
+      "icone": "crib",
+      "subcategorias": [
+        { "id": 801, "nome": "Fraldas", "descricao": "Fraldas descartáveis de vários tamanhos.", "icone": "baby_changing_station" },
+        { "id": 802, "nome": "Papinhas", "descricao": "Comidinhas práticas para o bebê.", "icone": "restaurant" },
+        { "id": 803, "nome": "Produtos de Higiene", "descricao": "Toalhitas, champôs e cremes específicos.", "icone": "clean_hands" }
+      ]
+    },
+    {
+      "id": 9,
+      "nome": "Animais",
+      "descricao": "Tudo o que o seu pet precisa para viver feliz.",
+      "icone": "pets",
+      "subcategorias": [
+        { "id": 901, "nome": "Ração", "descricao": "Alimentos secos e húmidos para animais.", "icone": "restaurant_menu" },
+        { "id": 902, "nome": "Acessórios", "descricao": "Brinquedos, coleiras, camas e mais.", "icone": "toys" },
+        { "id": 903, "nome": "Higiene para Pets", "descricao": "Shampoos, escovas e tapetes higiénicos.", "icone": "shower" }
+      ]
+    },
+    {
+      "id": 10,
+      "nome": "Beleza e Higiene",
+      "descricao": "Produtos para cuidados pessoais, beleza e bem-estar diário.",
+      "icone": "spa",
+      "subcategorias": [
+        { "id": 1001, "nome": "Cuidados Pessoais", "descricao": "Sabonetes, cremes e itens de uso diário para higiene e proteção.", "icone": "self_improvement" },
+        { "id": 1002, "nome": "Cosméticos", "descricao": "Maquiagens, esmaltes, perfumes e produtos de beleza.", "icone": "brush" },
+        { "id": 1003, "nome": "Produtos de Banho", "descricao": "Espumas, óleos, sais de banho e itens relaxantes.", "icone": "bathtub" }
+      ]
+    },
+    {
+      "id": 11,
+      "nome": "Limpeza do Lar",
+      "descricao": "Produtos para manter sua casa sempre limpa e cheirosa.",
+      "icone": "cleaning_services",
+      "subcategorias": [
+        { "id": 1101, "nome": "Detergentes", "descricao": "Limpadores para louças e superfícies.", "icone": "soap" },
+        { "id": 1102, "nome": "Desinfetantes", "descricao": "Produtos para higienizar e eliminar germes.", "icone": "science" },
+        { "id": 1103, "nome": "Produtos para Roupa", "descricao": "Sabões, amaciantes e tira-manchas.", "icone": "dry_cleaning" }
+      ]
+    },
+    {
+      "id": 12,
+      "nome": "Casa, Mobiliário e Decoração",
+      "descricao": "Utensílios e itens para tornar seu lar mais bonito e funcional.",
+      "icone": "home",
+      "subcategorias": [
+        { "id": 1201, "nome": "Utensílios Domésticos", "descricao": "Panelas, talheres, copos e outros itens de cozinha.", "icone": "kitchen" },
+        { "id": 1202, "nome": "Decoração", "descricao": "Artigos decorativos para todos os ambientes.", "icone": "palette" }
+      ]
+    },
+    {
+      "id": 13,
+      "nome": "Brinquedos e Jogos",
+      "descricao": "Diversão para todas as idades com brinquedos e jogos variados.",
+      "icone": "sports_esports",
+      "subcategorias": [
+        { "id": 1301, "nome": "Infantis", "descricao": "Brinquedos educativos e lúdicos para crianças.", "icone": "child_care" },
+        { "id": 1302, "nome": "Adultos", "descricao": "Jogos de tabuleiro, cartas e passatempo.", "icone": "casino" }
+      ]
+    },
+    {
+      "id": 14,
+      "nome": "Padaria e Pastelaria",
+      "descricao": "Delícias frescas como pães, bolos e doces variados.",
+      "icone": "cake",
+      "subcategorias": [
+        { "id": 1401, "nome": "Pães", "descricao": "Pães fresquinhos de vários tipos.", "icone": "bakery_dining" },
+        { "id": 1402, "nome": "Bolos", "descricao": "Bolos caseiros e confeitados.", "icone": "cake" },
+        { "id": 1403, "nome": "Biscoitos", "descricao": "Biscoitos doces, salgados e recheados.", "icone": "cookie" }
+      ]
+    },
+    {
+      "id": 15,
+      "nome": "Laticínios Frescos",
+      "descricao": "Variedades de produtos lácteos refrigerados.",
+      "icone": "icecream",
+      "subcategorias": [
+        { "id": 1501, "nome": "Leite Fresco", "descricao": "Leite pasteurizado de diferentes tipos.", "icone": "local_cafe" },
+        { "id": 1502, "nome": "Iogurte Natural", "descricao": "Iogurtes refrigerados e saudáveis.", "icone": "emoji_food_beverage" },
+        { "id": 1503, "nome": "Queijos Refrigerados", "descricao": "Queijos que exigem refrigeração constante.", "icone": "brunch_dining" }
+      ]
+    },
+    {
+      "id": 16,
+      "nome": "Carnes e Peixes Frescos",
+      "descricao": "Alimentos frescos e refrigerados, prontos para cozinhar.",
+      "icone": "restaurant",
+      "subcategorias": [
+        { "id": 1601, "nome": "Frango Fresco", "descricao": "Cortes de frango refrigerados.", "icone": "set_meal" },
+        { "id": 1602, "nome": "Carne Bovina", "descricao": "Cortes frescos de carne vermelha.", "icone": "restaurant_menu" },
+        { "id": 1603, "nome": "Peixe Fresco", "descricao": "Peixes refrigerados direto da peixaria.", "icone": "lunch_dining" }
+      ]
+    },
+    {
+      "id": 17,
+      "nome": "Bebidas Refrigeradas",
+      "descricao": "Bebidas geladas prontas para o consumo.",
+      "icone": "emoji_food_beverage",
+      "subcategorias": [
+        { "id": 1701, "nome": "Suco Natural", "descricao": "Sucos prontos e refrigerados.", "icone": "local_drink" },
+        { "id": 1702, "nome": "Refrigerantes Gelados", "descricao": "Bebidas com gás mantidas refrigeradas.", "icone": "sparkling_water" },
+        { "id": 1703, "nome": "Bebidas Vegetais", "descricao": "Leites vegetais refrigerados como soja, aveia e amêndoa.", "icone": "eco" }
+      ]
+    },
+    {
+      "id": 18,
+      "nome": "Sobremesas e Doces",
+      "descricao": "Sobremesas refrigeradas para adoçar seu dia.",
+      "icone": "icecream",
+      "subcategorias": [
+        { "id": 1801, "nome": "Pudins", "descricao": "Pudins frescos prontos para servir.", "icone": "cake" },
+        { "id": 1802, "nome": "Mousses", "descricao": "Mousses leves e refrigeradas.", "icone": "cookie" },
+        { "id": 1803, "nome": "Sobremesas Lácteas", "descricao": "Doces como flans e sobremesas com leite.", "icone": "bakery_dining" }
+      ]
+    },
+    {
+      "id": 19,
+      "nome": "Produtos Prontos",
+      "descricao": "Comidas refrigeradas prontas para aquecer e servir.",
+      "icone": "takeout_dining",
+      "subcategorias": [
+        { "id": 1901, "nome": "Saladas Prontas", "descricao": "Saladas lavadas e prontas para consumo.", "icone": "grass" },
+        { "id": 1902, "nome": "Massas Refrigeradas", "descricao": "Pastas frescas embaladas para refrigeração.", "icone": "ramen_dining" },
+        { "id": 1903, "nome": "Refeições Embaladas", "descricao": "Pratos prontos refrigerados para aquecimento rápido.", "icone": "dinner_dining" }
+      ]
+    }
+
+  ]
+}

@@ -12,6 +12,12 @@ class ListaRepository {
     return _db!;
   }
 
+  Future<void> resetarBanco() async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'listas.db');
+    await deleteDatabase(path);
+  }
+
   Future<Database> _initDb() async {
     final path = join(await getDatabasesPath(), 'listas.db');
     return openDatabase(
@@ -29,8 +35,10 @@ class ListaRepository {
           CREATE TABLE itens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             idLista INTEGER,
+            categoria INTEGER,
             nomeProduto TEXT,
-            quantidade INTEGER,
+            quantidade NUMERIC(6,2),
+            unidade Text,
             preco REAL,
             FOREIGN KEY (idLista) REFERENCES listas(id) ON DELETE CASCADE
           )
@@ -108,13 +116,15 @@ class ListaRepository {
     );
   }
 
-  Future<void> atualizarItem(ItemLista item) async {
+  Future<void> atualizarItemLista(ItemLista item) async {
     final database = await db;
     await database.update(
       'itens',
       {
+        'categoria': item.categoria,
         'nomeProduto': item.nomeProduto,
         'quantidade': item.quantidade,
+        'unidade': item.unidade,
         'preco': item.preco,
       },
       where: 'id = ?',
@@ -131,14 +141,35 @@ class ListaRepository {
     );
   }
 
-  Future<void> adicionarItem(int idLista, ItemLista item) async {
+  Future<ItemLista> adicionarItem(int idLista, ItemLista item) async {
     final database = await db;
-    await database.insert(
+    final id = await database.insert(
       'itens',
       {
         ...item.toMap(),
         'idLista': idLista,
       },
     );
+    // Retorna o item com o id gerado
+    return item.copyWith(idItemProduto: id);
+  }
+
+  Future<List<ItemLista>> buscarHistoricoProduto(String nomeProduto) async {
+    final database = await db;
+    final result = await database.query(
+      'itens',
+      where: 'nomeProduto = ? AND preco IS NOT NULL',
+      whereArgs: [nomeProduto],
+      orderBy: 'id DESC',
+    );
+    return result.map((e) => ItemLista.fromMap(e)).toList();
+  }
+
+  Future<double?> buscarMenorPrecoProduto(String nomeProduto) async {
+    final historico = await buscarHistoricoProduto(nomeProduto);
+    if (historico.isEmpty) return null;
+    return historico
+        .map((e) => e.preco ?? double.infinity)
+        .reduce((a, b) => a < b ? a : b);
   }
 }
